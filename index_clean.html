@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portal de Investigaciones</title>
+  <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; background: #f0f9ff; color: #1e293b; min-height: 100vh; position: relative; overflow-x: hidden; }
+  #bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .page-wrap { position: relative; z-index: 1; }
+  nav { background: rgba(255,255,255,0.88); backdrop-filter: blur(20px); border-bottom: 2px solid rgba(99,102,241,0.2); padding: 0 2rem; position: sticky; top: 0; z-index: 200; display: flex; align-items: center; gap: 1.5rem; height: 62px; box-shadow: 0 2px 20px rgba(99,102,241,0.1); }
+  nav .logo { font-weight: 800; font-size: 1rem; color: #1e293b; white-space: nowrap; }
+  nav .tabs { display: flex; gap: 0.4rem; }
+  nav .tab-btn { padding: 0.45rem 1.1rem; border-radius: 8px; border: 2px solid transparent; cursor: pointer; font-size: 0.82rem; font-weight: 700; transition: all 0.2s; background: transparent; color: #64748b; }
+  nav .tab-btn.active { background: #6366f1; color: #fff; border-color: #4f46e5; box-shadow: 0 4px 14px rgba(99,102,241,0.35); }
+  nav .tab-btn:hover:not(.active) { background: #f1f5f9; color: #1e293b; border-color: #e2e8f0; }
+  nav .alert-nav-btn { margin-left: auto; padding: 0.45rem 1.2rem; border-radius: 8px; border: 2px solid #ef4444; cursor: pointer; font-size: 0.82rem; font-weight: 700; background: #fef2f2; color: #ef4444; transition: all 0.2s; animation: pulse-btn 2s infinite; }
+  @keyframes pulse-btn { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3)} 50%{box-shadow:0 0 0 7px rgba(239,68,68,0)} }
+  nav .alert-nav-btn:hover { background: #ef4444; color: #fff; }
+  .hero-banner { position: relative; overflow: hidden; min-height: 260px; display: flex; align-items: flex-end; }
+  .hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; transition: all 0.6s ease; filter: brightness(0.7) saturate(1.3); }
+  .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(240,249,255,1) 0%, rgba(240,249,255,0.5) 50%, transparent 100%); }
+  .hero-content { position: relative; z-index: 2; padding: 2.5rem 2.5rem 2rem; max-width: 1100px; width: 100%; margin: 0 auto; }
+  .hero-content h1 { font-size: 2rem; font-weight: 800; color: #1e293b; line-height: 1.2; text-shadow: 0 1px 4px rgba(255,255,255,0.8); }
+  .hero-content p { margin-top: 0.5rem; color: #475569; font-size: 0.92rem; font-weight: 600; }
+  .badges { display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; }
+  .badge { padding: 0.25rem 0.85rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
+  .badge-red { background: #fef2f2; color: #dc2626; border: 2px solid #fca5a5; }
+  .badge-green { background: #f0fdf4; color: #16a34a; border: 2px solid #86efac; }
+  .badge-blue { background: #eff6ff; color: #2563eb; border: 2px solid #93c5fd; }
+  .badge-yellow { background: #fefce8; color: #ca8a04; border: 2px solid #fde047; }
+  .panel { display: none; max-width: 1100px; margin: 0 auto; padding: 1.5rem 2rem 5rem; }
+  .panel.active { display: block; }
+  .section-title { font-size: 0.8rem; font-weight: 800; color: #64748b; margin: 2.5rem 0 1rem; display: flex; align-items: center; gap: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+  .section-title .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .dot-red{background:#ef4444;box-shadow:0 0 8px #ef444460} .dot-orange{background:#f97316;box-shadow:0 0 8px #f9731660}
+  .dot-yellow{background:#eab308;box-shadow:0 0 8px #eab30860} .dot-green{background:#22c55e;box-shadow:0 0 8px #22c55e60}
+  .dot-blue{background:#6366f1;box-shadow:0 0 8px #6366f160} .dot-teal{background:#14b8a6;box-shadow:0 0 8px #14b8a660}
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat-card { background: #fff; border: 2px solid #e2e8f0; border-radius: 16px; padding: 1.25rem; text-align: center; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(99,102,241,0.15); border-color: #a5b4fc; }
+  .stat-card .num { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+  .stat-card .label { font-size: 0.72rem; color: #94a3b8; margin-top: 0.3rem; }
+  .num-red{color:#ef4444} .num-orange{color:#f97316} .num-yellow{color:#a16207} .num-green{color:#16a34a} .num-blue{color:#6366f1} .num-white{color:#1e293b}
+  .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+  @media(max-width:650px){.chart-row{grid-template-columns:1fr}}
+  .chart-card { background: #fff; border: 2px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .chart-card h4 { font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1rem; }
+  .donut-wrap { position: relative; width: 150px; height: 150px; }
+  .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+  .donut-center .big { font-size: 1.8rem; font-weight: 800; color: #1e293b; }
+  .donut-center .small { font-size: 0.68rem; color: #94a3b8; }
+  .legend { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 1rem; width: 100%; }
+  .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: #64748b; }
+  .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .hbar-list { display: flex; flex-direction: column; gap: 0.65rem; width: 100%; }
+  .hbar-item { display: flex; align-items: center; gap: 0.6rem; }
+  .hbar-label { font-size: 0.73rem; color: #64748b; width: 115px; flex-shrink: 0; }
+  .hbar-track { flex: 1; height: 18px; background: #f1f5f9; border-radius: 9px; overflow: hidden; }
+  .hbar-fill { height: 100%; border-radius: 9px; display: flex; align-items: center; padding-left: 0.4rem; font-size: 0.66rem; font-weight: 700; color: #fff; }
+  .hbar-val { font-size: 0.73rem; font-weight: 700; width: 38px; text-align: right; flex-shrink: 0; }
+  .vuln-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(265px,1fr)); gap: 1rem; }
+  .flip-card { height: 215px; perspective: 1000px; cursor: pointer; }
+  .flip-inner { position: relative; width: 100%; height: 100%; transition: transform 0.55s; transform-style: preserve-3d; }
+  .flip-card:hover .flip-inner,.flip-card.flipped .flip-inner { transform: rotateY(180deg); }
+  .flip-front,.flip-back { position: absolute; inset: 0; border-radius: 16px; padding: 1.2rem; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .flip-front { background: #fff; border: 2px solid; box-shadow: 0 4px 16px rgba(0,0,0,0.08); display: flex; flex-direction: column; justify-content: space-between; }
+  .flip-front.critical{border-color:#fca5a5} .flip-front.high{border-color:#fdba74}
+  .flip-back { transform: rotateY(180deg); display: flex; flex-direction: column; justify-content: space-between; border-radius: 16px; }
+  .flip-back.back-critical{background:#fef2f2;border:2px solid #fca5a5} .flip-back.back-high{background:#fff7ed;border:2px solid #fdba74}
+  .flip-front h4{font-size:0.88rem;font-weight:700;color:#1e293b} .flip-front .meta{display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem}
+  .flip-front p{font-size:0.79rem;color:#64748b;line-height:1.5} .flip-front .hint{font-size:0.67rem;color:#cbd5e1;margin-top:auto;padding-top:0.5rem}
+  .flip-back h5{font-size:0.7rem;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem}
+  .flip-back p{font-size:0.8rem;color:#374151;line-height:1.6} .flip-back .affected{margin-top:auto;font-size:0.68rem;color:#94a3b8}
+  .cvss-tag{padding:0.12rem 0.45rem;border-radius:6px;font-size:0.7rem;font-weight:700}
+  .cvss-crit{background:#fef2f2;color:#dc2626;border:1px solid #fca5a5} .cvss-high{background:#fff7ed;color:#ea580c;border:1px solid #fdba74}
+  .vuln-table{width:100%;border-collapse:collapse} .vuln-table th{font-size:0.7rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;padding:0.6rem 1rem;text-align:left;border-bottom:2px solid #f1f5f9}
+  .vuln-table td{padding:0.6rem 1rem;font-size:0.8rem;color:#374151;border-bottom:1px solid #f8fafc} .vuln-table tr:hover td{background:#f8fafc}
+  .cvss-med{background:#fefce8;color:#a16207;border:1px solid #fde047;padding:0.1rem 0.45rem;border-radius:6px;font-size:0.68rem;font-weight:700}
+  .cvss-low{background:#f0fdf4;color:#15803d;border:1px solid #86efac;padding:0.1rem 0.45rem;border-radius:6px;font-size:0.68rem;font-weight:700}
+  .alert{border-radius:14px;padding:1rem 1.25rem;margin-bottom:1rem;display:flex;gap:0.75rem;align-items:flex-start}
+  .alert-red{background:#fef2f2;border:2px solid #fca5a5} .alert-green{background:#f0fdf4;border:2px solid #86efac}
+  .alert-blue{background:#eff6ff;border:2px solid #93c5fd} .alert-yellow{background:#fefce8;border:2px solid #fde047}
+  .alert .icon{font-size:1.1rem;flex-shrink:0} .alert p{font-size:0.84rem;line-height:1.6;color:#374151} .alert p strong{display:block;margin-bottom:0.15rem;color:#1e293b}
+  .rec-list{list-style:none} .rec-list li{background:#fff;border-radius:14px;padding:1rem 1.25rem;margin-bottom:0.75rem;display:flex;gap:1rem;align-items:flex-start;border:2px solid #e2e8f0;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+  .rec-list li:hover{border-color:#a5b4fc;box-shadow:0 6px 20px rgba(99,102,241,0.12);transform:translateX(4px)} .rec-list li .icon{font-size:1.4rem;flex-shrink:0}
+  .rec-list li .text h5{font-size:0.88rem;font-weight:700;color:#1e293b} .rec-list li .text p{font-size:0.8rem;color:#64748b;margin-top:0.25rem;line-height:1.5}
+  .progress-ring{display:flex;align-items:center;gap:1rem;background:#fff;border-radius:14px;padding:1rem 1.25rem;margin-bottom:0.75rem;border:2px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,0.04);transition:all 0.2s}
+  .progress-ring:hover{border-color:#a5b4fc;box-shadow:0 6px 20px rgba(99,102,241,0.1)} .ring-wrap{position:relative;width:58px;height:58px;flex-shrink:0} .ring-wrap svg{transform:rotate(-90deg)}
+  .ring-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:800}
+  .progress-ring .info h5{font-size:0.88rem;font-weight:700;color:#1e293b} .progress-ring .info p{font-size:0.76rem;color:#64748b;margin-top:0.2rem}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:0.75rem;margin-bottom:1.5rem}
+  .gallery-item{border-radius:14px;overflow:hidden;aspect-ratio:4/3;position:relative;cursor:zoom-in;box-shadow:0 4px 14px rgba(0,0,0,0.1)}
+  .gallery-item img{width:100%;height:100%;object-fit:cover;transition:transform 0.3s;display:block} .gallery-item:hover img{transform:scale(1.07)}
+  .gallery-item .caption{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,0.7),transparent);padding:0.45rem 0.7rem;font-size:0.69rem;color:#fff;font-weight:700}
+  .species-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:1rem}
+  .species-card{background:#fff;border-radius:16px;overflow:hidden;border:2px solid #e2e8f0;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+  .species-card:hover{transform:translateY(-5px);box-shadow:0 14px 32px rgba(99,102,241,0.2);border-color:#a5b4fc}
+  .species-img-svg{width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:3rem}
+  .species-body{padding:0.7rem} .species-body .n{font-size:1.4rem;font-weight:800;color:#16a34a} .species-body .t{font-size:0.7rem;color:#94a3b8} .species-body .at-risk{font-size:0.65rem;color:#ea580c;margin-top:0.2rem;font-weight:600}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);z-index:1000;align-items:center;justify-content:center;padding:1rem}
+  .modal-overlay.open{display:flex}
+  .modal-box{background:#fff;border:2px solid #e2e8f0;border-radius:20px;padding:2rem;max-width:520px;width:100%;position:relative;animation:popIn 0.25s ease;box-shadow:0 24px 64px rgba(0,0,0,0.2)}
+  @keyframes popIn{from{transform:scale(0.9);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal-close{position:absolute;top:1rem;right:1rem;background:#f1f5f9;border:none;color:#64748b;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:700}
+  .modal-close:hover{background:#e2e8f0} .modal-box h3{font-size:1.05rem;font-weight:800;color:#1e293b;margin-bottom:0.5rem}
+  .modal-box .modal-meta{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap} .modal-box p{font-size:0.84rem;color:#64748b;line-height:1.7}
+  .modal-solution{background:#f0fdf4;border-radius:12px;padding:1rem;margin-top:1rem;font-size:0.82rem;color:#15803d;line-height:1.6;border:1px solid #86efac}
+  .modal-solution strong{color:#166534;display:block;margin-bottom:0.4rem;font-size:0.72rem;text-transform:uppercase;font-weight:800}
+  #panel-alert .alert-form-wrap{background:#fff;border:2px solid #e0e7ff;border-radius:20px;padding:2rem;max-width:660px;margin:0 auto;box-shadow:0 8px 32px rgba(99,102,241,0.1)}
+  .form-title{font-size:1.4rem;font-weight:800;color:#1e293b;margin-bottom:0.3rem} .form-sub{font-size:0.83rem;color:#94a3b8;margin-bottom:1.5rem}
+  .field-group{margin-bottom:1.1rem} .field-group label{display:block;font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.35rem}
+  .field-group input,.field-group textarea,.field-group select{width:100%;background:#f8fafc;border:2px solid #e2e8f0;border-radius:10px;padding:0.7rem 1rem;color:#1e293b;font-size:0.86rem;font-family:inherit;outline:none;transition:border-color 0.2s,box-shadow 0.2s}
+  .field-group input::placeholder,.field-group textarea::placeholder{color:#cbd5e1}
+  .field-group input:focus,.field-group textarea:focus,.field-group select:focus{border-color:#a5b4fc;box-shadow:0 0 0 3px rgba(99,102,241,0.1);background:#fff}
+  .field-group textarea{resize:vertical;min-height:105px}
+  .severity-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.55rem}
+  .sev-btn{padding:0.6rem 0.5rem;border-radius:10px;border:2px solid #e2e8f0;cursor:pointer;font-size:0.75rem;font-weight:700;text-align:center;background:#f8fafc;color:#94a3b8;transition:all 0.18s}
+  .sev-btn:hover{transform:scale(1.04)} .sev-btn.sel-crit{background:#fef2f2;border-color:#ef4444;color:#dc2626}
+  .sev-btn.sel-high{background:#fff7ed;border-color:#f97316;color:#ea580c} .sev-btn.sel-med{background:#fefce8;border-color:#eab308;color:#a16207}
+  .sev-btn.sel-low{background:#f0fdf4;border-color:#22c55e;color:#15803d}
+  .send-btn{width:100%;padding:0.9rem;border:none;border-radius:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:0.92rem;font-weight:800;cursor:pointer;transition:all 0.2s;margin-top:0.5rem;box-shadow:0 4px 20px rgba(99,102,241,0.35);display:flex;align-items:center;justify-content:center;gap:0.5rem}
+  .send-btn:hover{background:linear-gradient(135deg,#4f46e5,#7c3aed);transform:translateY(-2px);box-shadow:0 8px 28px rgba(99,102,241,0.45)}
+  .alerts-feed{margin-top:2rem;max-width:660px;margin-left:auto;margin-right:auto}
+  .alerts-feed h4{font-size:0.75rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem}
+  .alert-item{display:flex;gap:0.75rem;padding:1rem;border-radius:14px;margin-bottom:0.6rem;border:2px solid #e2e8f0;background:#fff;animation:slideIn 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+  @keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+  .alert-item.crit{border-color:#fca5a5;background:#fef2f2} .alert-item.high{border-color:#fdba74;background:#fff7ed}
+  .alert-item.med{border-color:#fde047;background:#fefce8} .alert-item.low{border-color:#86efac;background:#f0fdf4}
+  .alert-item .a-sev{font-size:1.2rem;flex-shrink:0} .alert-item .a-title{font-size:0.84rem;font-weight:700;color:#1e293b}
+  .alert-item .a-desc{font-size:0.76rem;color:#64748b;margin-top:0.2rem} .alert-item .a-meta{font-size:0.68rem;color:#94a3b8;margin-top:0.3rem;display:flex;gap:0.6rem;flex-wrap:wrap}
+  .counter-badge{background:#ef4444;color:#fff;border-radius:999px;font-size:0.65rem;font-weight:800;padding:0.1rem 0.4rem;display:none;margin-left:0.25rem} .counter-badge.vis{display:inline}
+  #toast{position:fixed;bottom:2rem;right:2rem;z-index:9999;background:#fff;border:2px solid #a5b4fc;border-radius:14px;padding:0.9rem 1.4rem;font-size:0.85rem;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:0.65rem;box-shadow:0 16px 48px rgba(99,102,241,0.2);transform:translateY(100px);opacity:0;transition:all 0.35s cubic-bezier(.34,1.56,.64,1)} #toast.show{transform:translateY(0);opacity:1}
+  footer{background:rgba(255,255,255,0.9);border-top:2px solid #e2e8f0;text-align:center;padding:1.5rem;font-size:0.76rem;color:#94a3b8;font-weight:600;margin-top:2rem}
+  @media(max-width:600px){nav{gap:0.4rem;padding:0 0.75rem;flex-wrap:wrap;height:auto;padding-top:0.5rem;padding-bottom:0.5rem} .panel{padding:1rem 1rem 4rem} .hero-content h1{font-size:1.3rem}}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box"><button class="modal-close" onclick="closeModal()">✕</button><h3 id="m-title"></h3><div class="modal-meta" id="m-meta"></div><p id="m-desc"></p><div class="modal-solution" id="m-sol"></div></div>
+</div>
+<div id="toast">🔔 <span id="toast-msg">Alerta enviada</span></div>
+
+<div class="page-wrap">
+<nav>
+  <div class="logo">🔬 Portal de Investigaciones</div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('seg',this)">🔐 Auditoría</button>
+    <button class="tab-btn" onclick="showTab('amb',this)">🌿 Ambiental</button>
+    <button class="tab-btn" onclick="showTab('alert',this)">🔔 Alertas <span class="counter-badge" id="alertCount">0</span></button>
+  </div>
+  <button class="alert-nav-btn" onclick="showTab('alert', document.querySelectorAll('.tab-btn')[2])">🚨 Enviar Alerta</button>
+</nav>
+<div class="hero-banner">
+  <div class="hero-bg" id="heroBg" style="background-image:url('https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1400&amp;q=80')"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <h1 id="hero-title">Auditoría de Seguridad — Plataforma Web Educativa</h1>
+    <p id="hero-sub">Instituto Técnico Superior "San Marcos" · Septiembre 2026 · Clasificación: Confidencial</p>
+    <div class="badges" id="hero-badges">
+      <span class="badge badge-red">🔴 Riesgo ALTO 7.8/10</span>
+      <span class="badge badge-blue">24 Vulnerabilidades</span>
+      <span class="badge badge-red">4 Críticas</span>
+    </div>
+  </div>
+</div>
+
+<div id="panel-seg" class="panel active">
+  <div class="alert alert-red"><span class="icon">🚨</span><p><strong>Acción Inmediata</strong>Suspender acceso público. Explotación posible en menos de 2 horas.</p></div>
+  <div class="section-title"><span class="dot dot-red"></span>Resumen Ejecutivo</div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="num num-red">7.8</div><div class="label">Riesgo / 10</div></div>
+    <div class="stat-card"><div class="num num-white">24</div><div class="label">Total Vulns</div></div>
+    <div class="stat-card"><div class="num num-red">4</div><div class="label">🔴 Críticas</div></div>
+    <div class="stat-card"><div class="num num-orange">6</div><div class="label">🟠 Altas</div></div>
+    <div class="stat-card"><div class="num num-yellow">9</div><div class="label">🟡 Medias</div></div>
+    <div class="stat-card"><div class="num num-green">5</div><div class="label">🟢 Bajas</div></div>
+  </div>
+  <div class="section-title"><span class="dot dot-blue"></span>Análisis Visual</div>
+  <div class="chart-row">
+    <div class="chart-card">
+      <h4>Distribución de Vulnerabilidades</h4>
+      <div class="donut-wrap"><canvas id="donutChart" width="150" height="150"></canvas><div class="donut-center"><span class="big">24</span><span class="small">total</span></div></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Críticas (4) 17%</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>Altas (6) 25%</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#eab308"></div>Medias (9) 37%</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>Bajas (5) 21%</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h4>CVSS Score Top Vulnerabilidades</h4>
+      <div class="hbar-list">
+        <div class="hbar-item"><span class="hbar-label">SQL Injection</span><div class="hbar-track"><div class="hbar-fill" style="width:98%;background:linear-gradient(90deg,#ef4444,#dc2626)">9.8</div></div><span class="hbar-val num-red">9.8</span></div>
+        <div class="hbar-item"><span class="hbar-label">RCE Upload</span><div class="hbar-track"><div class="hbar-fill" style="width:96%;background:linear-gradient(90deg,#ef4444,#dc2626)">9.6</div></div><span class="hbar-val num-red">9.6</span></div>
+        <div class="hbar-item"><span class="hbar-label">PII Exposure</span><div class="hbar-track"><div class="hbar-fill" style="width:91%;background:linear-gradient(90deg,#f97316,#ef4444)">9.1</div></div><span class="hbar-val num-red">9.1</span></div>
+        <div class="hbar-item"><span class="hbar-label">Deserialización</span><div class="hbar-track"><div class="hbar-fill" style="width:90%;background:linear-gradient(90deg,#f97316,#ef4444)">9.0</div></div><span class="hbar-val num-red">9.0</span></div>
+        <div class="hbar-item"><span class="hbar-label">Cmd Injection</span><div class="hbar-track"><div class="hbar-fill" style="width:84%;background:linear-gradient(90deg,#f97316,#ea580c)">8.4</div></div><span class="hbar-val num-orange">8.4</span></div>
+        <div class="hbar-item"><span class="hbar-label">XSS Almacenado</span><div class="hbar-track"><div class="hbar-fill" style="width:81%;background:linear-gradient(90deg,#f97316,#ea580c)">8.1</div></div><span class="hbar-val num-orange">8.1</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="section-title"><span class="dot dot-red"></span>🔴 Críticas — clic para solución</div>
+  <div class="vuln-grid">
+    <div class="flip-card" onclick="this.classList.toggle('flipped')"><div class="flip-inner"><div class="flip-front critical"><div><div class="meta"><span class="cvss-tag cvss-crit">CVSS 9.8</span></div><h4>💉 Inyección SQL</h4><p>Login acepta código SQL. Acceso sin contraseña y extracción de la BD.</p></div><div class="hint">👆 Clic → ver solución</div></div><div class="flip-back back-critical"><div><h5>✅ Solución</h5><p>Usar <strong>prepared statements</strong>. Nunca concatenar input. WAF.</p></div><div class="affected">/login · /api/auth/login</div></div></div></div>
+    <div class="flip-card" onclick="this.classList.toggle('flipped')"><div class="flip-inner"><div class="flip-front critical"><div><div class="meta"><span class="cvss-tag cvss-crit">CVSS 9.6</span></div><h4>💻 Ejecución Remota (RCE)</h4><p>Subida de archivos ejecuta código malicioso en el servidor.</p></div><div class="hint">👆 Clic → ver solución</div></div><div class="flip-back back-critical"><div><h5>✅ Solución</h5><p>Validar <strong>tipo MIME</strong>. Guardar uploads fuera del webroot.</p></div><div class="affected">/admin/upload · /api/files</div></div></div></div>
+    <div class="flip-card" onclick="this.classList.toggle('flipped')"><div class="flip-inner"><div class="flip-front critical"><div><div class="meta"><span class="cvss-tag cvss-crit">CVSS 9.1</span></div><h4>🔓 Exposición PII</h4><p>API devuelve 100 registros sin autenticación. Viola Ley 1581.</p></div><div class="hint">👆 Clic → ver solución</div></div><div class="flip-back back-critical"><div><h5>✅ Solución</h5><p>Autenticación + <strong>RBAC</strong> en todos los endpoints.</p></div><div class="affected">/api/students · /api/reports</div></div></div></div>
+    <div class="flip-card" onclick="this.classList.toggle('flipped')"><div class="flip-inner"><div class="flip-front critical"><div><div class="meta"><span class="cvss-tag cvss-crit">CVSS 9.0</span></div><h4>⚠️ Deserialización Insegura</h4><p>Sesiones sin validación. Ejecución de código arbitrario.</p></div><div class="hint">👆 Clic → ver solución</div></div><div class="flip-back back-critical"><div><h5>✅ Solución</h5><p>Usar <strong>JSON</strong> en lugar de serialización nativa. HMAC.</p></div><div class="affected">/api/session · /api/preferences</div></div></div></div>
+  </div>
+  <div class="section-title"><span class="dot dot-orange"></span>🟠 Altas — clic para detalles</div>
+  <div class="vuln-grid">
+    <div class="flip-card" onclick="this.classList.toggle('flipped')"><div class="flip-inner"><div class="flip-front high"><div><div class="meta"><span class="cvss-tag cvss-high">CVSS 8.4</span></div><h4>🖥️ Inyección Comandos SO</h4><p>Reportes ejecutan comandos con input del usuario.</p></div><div class="hint">👆 Clic → ver solución</div></div><div class="flip-back back-high"><div><h5>✅ Solución</h5><p>Eliminar llamadas al shell. Whitelist estricta.</p></div><div class="affected">/admin/reports · /admin/backup</div></div></div></div>
+    <div class="flip-card" onclick="this.classList.toggle('flipped')"><div class="flip-inner"><div class="flip-front high"><div><div class="meta"><span class="cvss-tag cvss-high">CVSS 8.1</span></div><h4>📝 XSS Almacenado</h4><p>Scripts maliciosos en el foro se ejecutan en todos los visitantes.</p></div><div class="hint">👆 Clic → ver solución</div></div><div class="flip-back back-high"><div><h5>✅ Solución</h5><p>Codificar outputs HTML. <strong>CSP</strong>. DOMPurify.</p></div><div class="affected">/forum · /messages · /profile</div></div></div></div>
+    <div class="flip-card" onclick="this.classList.toggle('flipped')"><div class="flip-inner"><div class="flip-front high"><div><div class="meta"><span class="cvss-tag cvss-high">CVSS 7.9</span></div><h4>🔑 IDOR — Acceso Roto</h4><p>Cambiar el ID en la URL accede a datos de cualquier estudiante.</p></div><div class="hint">👆 Clic → ver solución</div></div><div class="flip-back back-high"><div><h5>✅ Solución</h5><p>Verificar autorización en cada petición. UUIDs.</p></div><div class="affected">/api/users/{id} · /api/grades/{id}</div></div></div></div>
+    <div class="flip-card" onclick="this.classList.toggle('flipped')"><div class="flip-inner"><div class="flip-front high"><div><div class="meta"><span class="cvss-tag cvss-high">CVSS 7.5</span></div><h4>🔐 Autenticación Débil</h4><p>Sin límite de intentos. Tokens predecibles. Fuerza bruta.</p></div><div class="hint">👆 Clic → ver solución</div></div><div class="flip-back back-high"><div><h5>✅ Solución</h5><p>Bloqueo tras 5 intentos. <strong>JWT firmados</strong>. 2FA.</p></div><div class="affected">Sistema de autenticación global</div></div></div></div>
+  </div>
+  <div class="section-title"><span class="dot dot-yellow"></span>🟡 Medias y 🟢 Bajas</div>
+  <div style="background:#fff;border-radius:16px;overflow:hidden;border:2px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+    <table class="vuln-table">
+      <thead><tr><th>#</th><th>Vulnerabilidad</th><th>Nivel</th><th>CVSS</th></tr></thead>
+      <tbody>
+        <tr><td>11</td><td>Ausencia de protección CSRF</td><td><span class="cvss-med">MEDIA</span></td><td>6.5</td></tr>
+        <tr><td>12</td><td>Cabeceras HTTP ausentes</td><td><span class="cvss-med">MEDIA</span></td><td>5.4</td></tr>
+        <tr><td>13</td><td>Gestión de contraseñas inadecuada</td><td><span class="cvss-med">MEDIA</span></td><td>5.9</td></tr>
+        <tr><td>14</td><td>Cookies inseguras</td><td><span class="cvss-med">MEDIA</span></td><td>5.3</td></tr>
+        <tr><td>15</td><td>Enumeración de usuarios</td><td><span class="cvss-med">MEDIA</span></td><td>5.3</td></tr>
+        <tr><td>16</td><td>Endpoints admin expuestos</td><td><span class="cvss-med">MEDIA</span></td><td>6.1</td></tr>
+        <tr><td>17</td><td>API versionado inseguro</td><td><span class="cvss-med">MEDIA</span></td><td>5.7</td></tr>
+        <tr><td>18</td><td>Monitoreo insuficiente</td><td><span class="cvss-med">MEDIA</span></td><td>5.5</td></tr>
+        <tr><td>19</td><td>12 dependencias desactualizadas</td><td><span class="cvss-med">MEDIA</span></td><td>6.3</td></tr>
+        <tr><td>20</td><td>Versión del servidor expuesta</td><td><span class="cvss-low">BAJA</span></td><td>3.7</td></tr>
+        <tr><td>21</td><td>Sin CSP estricta</td><td><span class="cvss-low">BAJA</span></td><td>3.2</td></tr>
+        <tr><td>22</td><td>Links rotos / redirecciones</td><td><span class="cvss-low">BAJA</span></td><td>4.3</td></tr>
+        <tr><td>23</td><td>Sin rate limiting</td><td><span class="cvss-low">BAJA</span></td><td>4.0</td></tr>
+        <tr><td>24</td><td>Comentarios en producción</td><td><span class="cvss-low">BAJA</span></td><td>2.1</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="section-title"><span class="dot dot-blue"></span>📅 Plan de Remediación</div>
+  <div class="alert alert-blue"><span class="icon">🎯</span><p><strong>Proyección:</strong> 90 días → riesgo BAJO. 180 días → postura ROBUSTA.</p></div>
+  <div class="progress-ring"><div class="ring-wrap"><svg width="58" height="58"><circle cx="29" cy="29" r="23" fill="none" stroke="#fee2e2" stroke-width="5"></circle><circle cx="29" cy="29" r="23" fill="none" stroke="#ef4444" stroke-width="5" stroke-dasharray="145" stroke-dashoffset="0" stroke-linecap="round"></circle></svg><div class="ring-text" style="color:#ef4444">S1</div></div><div class="info"><h5>🔴 Semana 1 — Inmediato</h5><p>Suspender acceso. Corregir 4 críticas. Actualizar Spring, Log4j.</p></div></div>
+  <div class="progress-ring"><div class="ring-wrap"><svg width="58" height="58"><circle cx="29" cy="29" r="23" fill="none" stroke="#ffedd5" stroke-width="5"></circle><circle cx="29" cy="29" r="23" fill="none" stroke="#f97316" stroke-width="5" stroke-dasharray="145" stroke-dashoffset="36" stroke-linecap="round"></circle></svg><div class="ring-text" style="color:#f97316">S2</div></div><div class="info"><h5>🟠 Semanas 2–4</h5><p>6 altas. OWASP Dependency-Check. Cabeceras HTTP.</p></div></div>
+  <div class="progress-ring"><div class="ring-wrap"><svg width="58" height="58"><circle cx="29" cy="29" r="23" fill="none" stroke="#fef9c3" stroke-width="5"></circle><circle cx="29" cy="29" r="23" fill="none" stroke="#eab308" stroke-width="5" stroke-dasharray="145" stroke-dashoffset="73" stroke-linecap="round"></circle></svg><div class="ring-text" style="color:#a16207">M2</div></div><div class="info"><h5>🟡 Meses 2–3</h5><p>9 medias. CSRF, cookies, contraseñas.</p></div></div>
+  <div class="progress-ring"><div class="ring-wrap"><svg width="58" height="58"><circle cx="29" cy="29" r="23" fill="none" stroke="#dcfce7" stroke-width="5"></circle><circle cx="29" cy="29" r="23" fill="none" stroke="#22c55e" stroke-width="5" stroke-dasharray="145" stroke-dashoffset="109" stroke-linecap="round"></circle></svg><div class="ring-text" style="color:#16a34a">M4</div></div><div class="info"><h5>🟢 Mes 4+ — Mantenimiento</h5><p>5 bajas. Auditorías. Bug bounty.</p></div></div>
+</div>
+
+<div id="panel-amb" class="panel">
+  <div class="alert alert-green"><span class="icon">✅</span><p><strong>Conclusión:</strong> Proyecto viable. Irrigación tecnificada con zonas de amortiguamiento e inversión social paralela.</p></div>
+  <div class="section-title"><span class="dot dot-teal"></span>Datos Clave</div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="num" style="color:#0284c7">4.5</div><div class="label">m³/s caudal</div></div>
+    <div class="stat-card"><div class="num num-green">74%</div><div class="label">Suelos Clase II</div></div>
+    <div class="stat-card"><div class="num num-yellow">500</div><div class="label">ha frágil</div></div>
+    <div class="stat-card"><div class="num num-orange">22</div><div class="label">sp. conservación</div></div>
+    <div class="stat-card"><div class="num num-blue">165</div><div class="label">especies</div></div>
+    <div class="stat-card"><div class="num num-red">9.2%</div><div class="label">sin agua</div></div>
+  </div>
+  <div class="section-title"><span class="dot dot-green"></span>🖼️ Área de Estudio</div>
+  <div class="gallery">
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=400&amp;q=80" alt="Río"><div class="caption">Río Chira</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&amp;q=80" alt="Campos"><div class="caption">Suelos Clase II</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1444927714506-8492d94b4e3d?w=400&amp;q=80" alt="Aves"><div class="caption">48 especies de aves</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1564419320461-6870880221ad?w=400&amp;q=80" alt="Riego"><div class="caption">Riego tecnificado</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&amp;q=80" alt="Bosque"><div class="caption">Ecosistema ribereño</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1474552226712-ac0f0961a954?w=400&amp;q=80" alt="Com"><div class="caption">Comunidad Marcavelica</div></div>
+  </div>
+  <div class="section-title"><span class="dot dot-green"></span>Biodiversidad y Suelos</div>
+  <div class="chart-row">
+    <div class="chart-card">
+      <h4>Especies por Grupo</h4>
+      <div class="donut-wrap"><canvas id="bioChart" width="150" height="150"></canvas><div class="donut-center"><span class="big">165</span><span class="small">especies</span></div></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Flora (68)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Aves (48)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#db2777"></div>Mamíferos (18)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ea580c"></div>Peces · Reptiles · Anfibios (31)</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h4>Uso de Suelos · Agua</h4>
+      <div class="hbar-list">
+        <div class="hbar-item"><span class="hbar-label">Clase II</span><div class="hbar-track"><div class="hbar-fill" style="width:74%;background:linear-gradient(90deg,#22c55e,#16a34a)">74%</div></div><span class="hbar-val num-green">74%</span></div>
+        <div class="hbar-item"><span class="hbar-label">Clase III</span><div class="hbar-track"><div class="hbar-fill" style="width:15%;background:linear-gradient(90deg,#eab308,#ca8a04)"></div></div><span class="hbar-val num-yellow">15%</span></div>
+        <div class="hbar-item"><span class="hbar-label">Clase IV</span><div class="hbar-track"><div class="hbar-fill" style="width:8%;background:linear-gradient(90deg,#f97316,#ea580c)"></div></div><span class="hbar-val num-orange">8%</span></div>
+        <div style="margin-top:0.75rem;padding-top:0.75rem;border-top:2px solid #f1f5f9">
+          <div class="hbar-item"><span class="hbar-label">Agua potable</span><div class="hbar-track"><div class="hbar-fill" style="width:62.5%;background:linear-gradient(90deg,#0ea5e9,#0284c7)">62.5%</div></div><span class="hbar-val" style="color:#0284c7">62%</span></div>
+          <div class="hbar-item"><span class="hbar-label">Pozo/acequia</span><div class="hbar-track"><div class="hbar-fill" style="width:28.3%;background:linear-gradient(90deg,#94a3b8,#64748b)"></div></div><span class="hbar-val" style="color:#64748b">28%</span></div>
+          <div class="hbar-item"><span class="hbar-label">Sin agua segura</span><div class="hbar-track"><div class="hbar-fill" style="width:9.2%;background:linear-gradient(90deg,#ef4444,#dc2626)"></div></div><span class="hbar-val num-red">9%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="alert alert-yellow"><span class="icon">⚠️</span><p><strong>Especies en Conservación:</strong> 6 flora + 6 fauna. Tilapia (<em>Oreochromis niloticus</em>) amenaza la ictiofauna nativa.</p></div>
+  <div class="section-title"><span class="dot dot-teal"></span>🐾 Grupos de Especies — clic para info</div>
+  <div class="species-grid">
+    <div class="species-card" onclick="openSpecies('flora')"><div class="species-img-svg" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0)">🌿</div><div class="species-body"><div class="n">68</div><div class="t">Flora</div><div class="at-risk">⚠️ 6 en conservación</div></div></div>
+    <div class="species-card" onclick="openSpecies('aves')"><div class="species-img-svg" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe)">🦜</div><div class="species-body"><div class="n">48</div><div class="t">Aves</div><div class="at-risk">⚠️ 3 en conservación</div></div></div>
+    <div class="species-card" onclick="openSpecies('mamiferos')"><div class="species-img-svg" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8)">🦊</div><div class="species-body"><div class="n">18</div><div class="t">Mamíferos</div><div class="at-risk">⚠️ 2 en conservación</div></div></div>
+    <div class="species-card" onclick="openSpecies('peces')"><div class="species-img-svg" style="background:linear-gradient(135deg,#e0f2fe,#bae6fd)">🐟</div><div class="species-body"><div class="n">15</div><div class="t">Peces</div><div class="at-risk">🚨 Especie invasora</div></div></div>
+    <div class="species-card" onclick="openSpecies('reptiles')"><div class="species-img-svg" style="background:linear-gradient(135deg,#fefce8,#fef08a)">🦎</div><div class="species-body"><div class="n">12</div><div class="t">Reptiles</div><div class="at-risk">⚠️ 1 en conservación</div></div></div>
+    <div class="species-card" onclick="openSpecies('anfibios')"><div class="species-img-svg" style="background:linear-gradient(135deg,#ccfbf1,#99f6e4)">🐸</div><div class="species-body"><div class="n">4</div><div class="t">Anfibios</div><div class="at-risk">Monitoreo activo</div></div></div>
+  </div>
+  <div class="section-title"><span class="dot dot-orange"></span>⚠️ Riesgos</div>
+  <ul class="rec-list">
+    <li><span class="icon">🌊</span><div class="text"><h5>Eventos El Niño</h5><p>Incremento extremo del caudal. Diseño con factores para 50–100 años de retorno.</p></div></li>
+    <li><span class="icon">🌿</span><div class="text"><h5>Ecosistema Frágil — 500 ha</h5><p>22 especies en conservación. Alteraciones pueden ser irreversibles.</p></div></li>
+    <li><span class="icon">🐟</span><div class="text"><h5>Tilapia Invasora</h5><p>Desplaza peces nativos. Monitoreo trimestral y control activo.</p></div></li>
+    <li><span class="icon">👥</span><div class="text"><h5>Vulnerabilidad Social</h5><p>9.2% sin agua segura. Inversión social paralela obligatoria.</p></div></li>
+  </ul>
+  <div class="section-title"><span class="dot dot-teal"></span>✅ Recomendaciones</div>
+  <ul class="rec-list">
+    <li><span class="icon">🚿</span><div class="text"><h5>Irrigación Tecnificada</h5><p>Riego por goteo en suelos Clase III. Monitoreo de calidad de agua trimestral.</p></div></li>
+    <li><span class="icon">🦎</span><div class="text"><h5>Rescate de Flora y Fauna</h5><p>Programa antes de obras. Monitoreo semestral durante construcción.</p></div></li>
+    <li><span class="icon">🌳</span><div class="text"><h5>Zonas de Amortiguamiento</h5><p>Franjas de protección alrededor de 500 ha de ecosistema frágil.</p></div></li>
+    <li><span class="icon">🏘️</span><div class="text"><h5>Programa Social</h5><p>Salud, educación, saneamiento. Meta: agua potable al 100% en 3 años.</p></div></li>
+  </ul>
+</div>
+
+<div id="panel-alert" class="panel">
+  <div style="text-align:center;padding:1.5rem 0 0.5rem">
+    <div style="font-size:2.8rem;margin-bottom:0.5rem">🔔</div>
+    <div style="font-size:0.72rem;font-weight:800;color:#6366f1;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.25rem">Sistema de Alertas</div>
+    <div style="font-size:0.83rem;color:#94a3b8">Notifica a tu equipo sobre hallazgos críticos del portal</div>
+  </div>
+  <div style="max-width:660px;margin:1.5rem auto 0">
+    <div class="alert-form-wrap">
+      <div class="form-title">📢 Nueva Alerta</div>
+      <div class="form-sub">Completa el formulario para registrar y notificar un hallazgo</div>
+      <div class="field-group"><label>Tipo de Alerta</label><select id="alertTipo"><option value="seg">🔐 Seguridad Web — Vulnerabilidad detectada</option><option value="amb">🌿 Ambiental — Impacto en ecosistema</option><option value="soc">👥 Social — Afectación a la comunidad</option><option value="inf">📋 Informe — Actualización de investigación</option><option value="otro">⚡ Otro</option></select></div>
+      <div class="field-group"><label>Severidad</label><div class="severity-grid"><button class="sev-btn" id="sev-crit" onclick="selectSev('crit')">🔴 Crítica</button><button class="sev-btn" id="sev-high" onclick="selectSev('high')">🟠 Alta</button><button class="sev-btn sel-med" id="sev-med" onclick="selectSev('med')">🟡 Media</button><button class="sev-btn" id="sev-low" onclick="selectSev('low')">🟢 Baja</button></div></div>
+      <div class="field-group"><label>Título del Hallazgo</label><input type="text" id="alertTitle" placeholder="Ej: Nueva vulnerabilidad detectada..."></div>
+      <div class="field-group"><label>Descripción detallada</label><textarea id="alertDesc" placeholder="Describe qué encontraste, dónde ocurre, qué impacto tiene..."></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="field-group"><label>Reportado por</label><input type="text" id="alertAuthor" placeholder="Tu nombre o equipo"></div>
+        <div class="field-group"><label>Área afectada</label><input type="text" id="alertArea" placeholder="Ej: Módulo autenticación"></div>
+      </div>
+      <button class="send-btn" onclick="sendAlert()">🚀 Enviar Alerta</button>
+    </div>
+    <div class="alerts-feed" id="alertsFeed" style="display:none">
+      <h4>📋 Alertas registradas (<span id="alertFeedCount">0</span>)</h4>
+      <div id="alertsList"></div>
+    </div>
+  </div>
+</div>
+
+<footer>Portal de Investigaciones · Auditoría de Seguridad Web &amp; Estudio de Impacto Ambiental · Septiembre 2026</footer>
+</div>
+<script>
+/* CHEERFUL BG */
+(function(){
+  const c=document.getElementById('bg-canvas'),ctx=c.getContext('2d');
+  let W,H,bubbles=[];
+  const colors=['#fbbf24','#f472b6','#34d399','#60a5fa','#a78bfa','#fb923c','#4ade80','#38bdf8','#f9a8d4','#86efac','#fde047','#c084fc'];
+  function resize(){W=c.width=window.innerWidth;H=c.height=Math.max(document.body.scrollHeight,window.innerHeight);}
+  class Bubble{
+    constructor(){this.reset(true);}
+    reset(init){this.x=Math.random()*W;this.y=init?Math.random()*H:H+80;this.r=Math.random()*38+10;this.vy=-(Math.random()*0.35+0.12);this.vx=(Math.random()-0.5)*0.25;this.color=colors[Math.floor(Math.random()*colors.length)];this.a=Math.random()*0.13+0.04;this.wobble=Math.random()*Math.PI*2;this.wobbleSpeed=Math.random()*0.02+0.005;}
+    update(){this.y+=this.vy;this.wobble+=this.wobbleSpeed;this.x+=Math.sin(this.wobble)*0.5+this.vx;if(this.y<-100)this.reset(false);}
+    draw(){const hex=this.color;const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.fillStyle=`rgba(${r},${g},${b},${this.a})`;ctx.fill();ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.strokeStyle=`rgba(${r},${g},${b},${this.a*1.8})`;ctx.lineWidth=1.5;ctx.stroke();}
+  }
+  function drawBg(){const t=Date.now()/8000;const gr=ctx.createLinearGradient(W*(0.3+0.2*Math.sin(t)),0,W*(0.7+0.2*Math.cos(t*0.7)),H);gr.addColorStop(0,'rgba(255,237,213,0.55)');gr.addColorStop(0.25,'rgba(254,240,138,0.45)');gr.addColorStop(0.5,'rgba(221,254,216,0.55)');gr.addColorStop(0.75,'rgba(219,234,254,0.55)');gr.addColorStop(1,'rgba(243,232,255,0.55)');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);}
+  function init(){resize();bubbles=Array.from({length:50},()=>new Bubble());}
+  function loop(){c.height=Math.max(document.body.scrollHeight,window.innerHeight);ctx.clearRect(0,0,W,H);drawBg();bubbles.forEach(b=>{b.update();b.draw();});requestAnimationFrame(loop);}
+  window.addEventListener('resize',resize);init();loop();
+})();
+
+/* TABS */
+function showTab(tab,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  if(btn)btn.classList.add('active');
+  const h={seg:{img:'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1400&q=80',title:'Auditoría de Seguridad — Plataforma Web Educativa',sub:'Instituto Técnico Superior "San Marcos" · Septiembre 2026 · Confidencial',b:'<span class="badge badge-red">🔴 Riesgo ALTO 7.8/10</span><span class="badge badge-blue">24 Vulnerabilidades</span>'},amb:{img:'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=1400&q=80',title:'Estudio de Impacto Ambiental — Río Chira · Banano Marcavelica',sub:'Proyecto de Irrigación · Región Piura, Perú · MINAGRI',b:'<span class="badge badge-green">✅ Viable</span><span class="badge badge-blue">165 Especies</span><span class="badge badge-yellow">⚠️ 22 en Conservación</span>'},alert:{img:'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=1400&q=80',title:'Sistema de Alertas',sub:'Reporta hallazgos críticos a tu equipo en tiempo real',b:'<span class="badge badge-red">🔔 Alertas Activas</span><span class="badge badge-blue">Seguridad · Ambiental · Social</span>'}};
+  const x=h[tab];document.getElementById('heroBg').style.backgroundImage=`url('${x.img}')`;document.getElementById('hero-title').textContent=x.title;document.getElementById('hero-sub').textContent=x.sub;document.getElementById('hero-badges').innerHTML=x.b;
+}
+
+/* DONUTS */
+function drawDonut(id,data,colors){const c=document.getElementById(id);if(!c)return;const ctx=c.getContext('2d');c.width=150;c.height=150;const total=data.reduce((a,b)=>a+b,0);let angle=-Math.PI/2;data.forEach((val,i)=>{const sweep=(val/total)*2*Math.PI;ctx.beginPath();ctx.arc(75,75,55,angle,angle+sweep);ctx.lineWidth=16;ctx.strokeStyle=colors[i];ctx.stroke();angle+=sweep;});ctx.beginPath();ctx.arc(75,75,47,0,2*Math.PI);ctx.fillStyle='rgba(255,255,255,0.97)';ctx.fill();}
+setTimeout(()=>{drawDonut('donutChart',[4,6,9,5],['#ef4444','#f97316','#eab308','#22c55e']);drawDonut('bioChart',[68,48,18,31],['#16a34a','#2563eb','#db2777','#ea580c']);},200);
+
+/* SPECIES MODAL */
+const sD={flora:{title:'🌿 Flora — 68 Especies',meta:'<span class="cvss-tag" style="background:#f0fdf4;color:#15803d;border:1px solid #86efac">68 total</span><span class="cvss-tag" style="background:#fefce8;color:#a16207;border:1px solid #fde047">6 en conservación</span>',desc:'68 especies, 6 bajo conservación. Incluye árboles riparios del bosque seco ecuatorial de Piura.',sol:'🔬 Rescate y reubicación antes de obras. Prohibición de tala. Revegetación con nativas.'},aves:{title:'🦜 Aves — 48 Especies',meta:'<span class="cvss-tag" style="background:#f0fdf4;color:#15803d;border:1px solid #86efac">48 total</span><span class="cvss-tag" style="background:#fefce8;color:#a16207;border:1px solid #fde047">3 en conservación</span>',desc:'Corredor ecológico clave del Río Chira. 3 especies bajo conservación del SERFOR.',sol:'🔬 Conservar vegetación ribereña. Evitar construcción en reproducción (sep–feb).'},mamiferos:{title:'🦊 Mamíferos — 18 Especies',meta:'<span class="cvss-tag" style="background:#f0fdf4;color:#15803d;border:1px solid #86efac">18 total</span><span class="cvss-tag" style="background:#fefce8;color:#a16207;border:1px solid #fde047">2 en conservación</span>',desc:'Mamíferos menores y medianos. 2 bajo conservación. Fragmentación del hábitat es amenaza principal.',sol:'🔬 Corredores de movimiento. Cámaras trampa durante construcción.'},peces:{title:'🐟 Ictiofauna — 15 Especies',meta:'<span class="cvss-tag cvss-crit">🚨 Especie invasora</span>',desc:'Tilapia (Oreochromis niloticus) compite con peces nativos amenazando la biodiversidad íctica.',sol:'🔬 Control activo de tilapia. Monitoreo trimestral. Prohibir nuevas especies alóctonas.'},reptiles:{title:'🦎 Reptiles — 12 Especies',meta:'<span class="cvss-tag" style="background:#f0fdf4;color:#15803d;border:1px solid #86efac">12 total</span><span class="cvss-tag" style="background:#fefce8;color:#a16207;border:1px solid #fde047">1 en conservación</span>',desc:'Lagartijas, serpientes y tortuga de agua. Indicadores del ecosistema árido-costero.',sol:'🔬 Rescate manual antes del desmonte. Refugios artificiales. Monitoreo anual.'},anfibios:{title:'🐸 Anfibios — 4 Especies',meta:'<span class="cvss-tag" style="background:#eff6ff;color:#1d4ed8;border:1px solid #93c5fd">monitoreo activo</span>',desc:'Bioindicadores muy sensibles a cambios en calidad del agua y temperatura.',sol:'🔬 Monitoreo de calidad de agua. Control de pesticidas adyacentes.'}};
+function openSpecies(k){const d=sD[k];document.getElementById('m-title').textContent=d.title;document.getElementById('m-meta').innerHTML=d.meta;document.getElementById('m-desc').textContent=d.desc;document.getElementById('m-sol').innerHTML='<strong>Recomendación técnica</strong>'+d.sol;document.getElementById('modal').classList.add('open');}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+/* ALERT SYSTEM */
+let selSev='med',alertsArr=[];
+function selectSev(s){selSev=s;['crit','high','med','low'].forEach(x=>{const b=document.getElementById('sev-'+x);b.className='sev-btn';if(x===s)b.classList.add('sel-'+x);});}
+function sendAlert(){
+  const tipo=document.getElementById('alertTipo').value,title=document.getElementById('alertTitle').value.trim(),desc=document.getElementById('alertDesc').value.trim(),author=document.getElementById('alertAuthor').value.trim()||'Anónimo',area=document.getElementById('alertArea').value.trim()||'—';
+  if(!title){showToast('⚠️ Ingresa un título','#f97316');document.getElementById('alertTitle').focus();return;}
+  if(!desc){showToast('⚠️ Describe el hallazgo','#f97316');document.getElementById('alertDesc').focus();return;}
+  const sm={crit:{label:'🔴 Crítica',cls:'crit',icon:'🚨'},high:{label:'🟠 Alta',cls:'high',icon:'⚠️'},med:{label:'🟡 Media',cls:'med',icon:'📋'},low:{label:'🟢 Baja',cls:'low',icon:'ℹ️'}};
+  const tm={seg:'🔐 Seguridad',amb:'🌿 Ambiental',soc:'👥 Social',inf:'📋 Informe',otro:'⚡ Otro'};
+  const now=new Date(),ts=now.toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'})+' '+now.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});
+  alertsArr.unshift({tipo:tm[tipo]||'⚡',sevLabel:sm[selSev].label,sevCls:sm[selSev].cls,icon:sm[selSev].icon,title,desc,author,area,ts});
+  const badge=document.getElementById('alertCount');badge.textContent=alertsArr.length;badge.classList.add('vis');
+  renderFeed();
+  document.getElementById('alertTitle').value='';document.getElementById('alertDesc').value='';document.getElementById('alertArea').value='';document.getElementById('alertAuthor').value='';selectSev('med');
+  showToast('🔔 Alerta registrada correctamente');
+}
+function renderFeed(){
+  const feed=document.getElementById('alertsFeed'),list=document.getElementById('alertsList');
+  feed.style.display='block';document.getElementById('alertFeedCount').textContent=alertsArr.length;
+  list.innerHTML=alertsArr.map(a=>`<div class="alert-item ${a.sevCls}"><div class="a-sev">${a.icon}</div><div><div class="a-title">${esc(a.title)}</div><div class="a-desc">${esc(a.desc)}</div><div class="a-meta"><span>📁 ${a.tipo}</span><span>${a.sevLabel}</span><span>📍 ${esc(a.area)}</span><span>👤 ${esc(a.author)}</span><span>🕐 ${a.ts}</span></div></div></div>`).join('');
+}
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function showToast(msg){const t=document.getElementById('toast'),m=document.getElementById('toast-msg');m.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+</script>
+</body>
+</html>
